@@ -260,23 +260,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "enter":
 			if m.state == stateProjectList {
-				proj := m.projects[m.projectCursor]
-
-				// Check if project path exists
-				if _, err := os.Stat(proj.Path); os.IsNotExist(err) {
-					m.state = stateSetupLog
-					m.logs = []string{fmt.Sprintf("Project %s not found.", proj.Name), fmt.Sprintf("Cloning from: %s", proj.RepoURL)}
-					m.viewport.SetContent(strings.Join(m.logs, "\n"))
-					m.viewport.GotoBottom()
-
-					m.isRunning = true
-					m.err = nil
-					// Run git clone
-					cmds = append(cmds, runner.StartCommand(m.workspaceDir, "git", []string{"clone", proj.RepoURL}, m.Program))
-				} else {
-					m.state = stateCommandList
-					m.commandCursor = 0 // Reset command selection
-				}
+				m.state = stateCommandList
+				m.commandCursor = 0 // Reset command selection
 			} else if m.state == stateCommandList {
 				proj := m.projects[m.projectCursor]
 				cmdToRun := proj.Commands[m.commandCursor]
@@ -393,7 +378,7 @@ func (m Model) View() string {
 	var statusText string
 	switch m.state {
 	case stateProjectList:
-		statusText = "↑/↓: Navigate • Enter: Select (will clone if missing) • q: Quit"
+		statusText = "↑/↓: Navigate • Enter: Select • q: Quit"
 	case stateCommandList:
 		statusText = "↑/↓: Navigate • Enter: Run • esc: Back • q: Quit"
 	case stateCommandLog, stateSetupLog:
@@ -591,9 +576,8 @@ func (m Model) renderCommandLog() string {
 
 func getDefaultWorkspace() string {
 	cwd, _ := os.Getwd()
-	// Generally we assume stocat-commander is in the workspace directory
-	// so the parent directory is the workspace
-	parent := cwd + "/.."
+	// The user requested to use the current project directory (stocat-commander) as the workspace
+	parent := cwd
 	if ws := os.Getenv("WORKSPACE"); ws != "" {
 		parent = ws
 	}

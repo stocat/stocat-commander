@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"stocat-commander/ui"
 
@@ -12,14 +11,14 @@ import (
 
 func main() {
 	// Root workspace directory where all projects live
-	// We assume stocat-commander is inside our workspace
+	// The user explicitly wants commands to run and clone inside the current directory (stocat-commander)
 	cwd, err := os.Getwd()
 	if err != nil {
 		fmt.Printf("Can't get current dir: %v\n", err)
 		os.Exit(1)
 	}
 
-	workspaceDir := filepath.Dir(cwd) // Go up one level to workspace directory
+	workspaceDir := cwd // Use the current directory, NOT the parent
 
 	m := ui.InitialModel(workspaceDir)
 
